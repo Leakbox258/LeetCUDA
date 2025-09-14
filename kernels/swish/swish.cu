@@ -21,90 +21,20 @@ __device__ __forceinline__ float swish(float x) {
   return x / (1.0f + expf(-x));
 }
 
-__global__ void swish_f32_kernel(float *x, float *y, int N) {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < N)
-    y[idx] = swish(x[idx]);
-}
+__global__ void swish_f32_kernel(float *x, float *y, int N) {}
 
-__global__ void swish_f32x4_kernel(float *x, float *y, int N) {
-  int idx = (blockIdx.x * blockDim.x + threadIdx.x) * 4;
-  if (idx < N) {
-    float4 reg_x = FLOAT4(x[idx]);
-    float4 reg_y;
-    reg_y.x = swish(reg_x.x);
-    reg_y.y = swish(reg_x.y);
-    reg_y.z = swish(reg_x.z);
-    reg_y.w = swish(reg_x.w);
-    FLOAT4(y[idx]) = reg_y;
-  }
-}
+__global__ void swish_f32x4_kernel(float *x, float *y, int N) {}
 
 //  FP16
-__device__ __forceinline__ half swish_half(half x) {
-  return __hmul(x, __hdiv(__float2half(1.0f),
-                          __hadd(__float2half(1.0f), hexp(__hneg(x)))));
-}
+__device__ __forceinline__ half swish_half(half x) {}
 
-__global__ void swish_f16_kernel(half *x, half *y, int N) {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < N)
-    y[idx] = swish_half(x[idx]);
-}
+__global__ void swish_f16_kernel(half *x, half *y, int N) {}
 
-__global__ void swish_f16x2_kernel(half *x, half *y, int N) {
-  int idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
-  if (idx < N) {
-    half2 reg_x = HALF2(x[idx]);
-    half2 reg_y;
-    reg_y.x = swish_half(reg_x.x);
-    reg_y.y = swish_half(reg_x.y);
-    HALF2(y[idx]) = reg_y;
-  }
-}
+__global__ void swish_f16x2_kernel(half *x, half *y, int N) {}
 
-__global__ void swish_f16x8_kernel(half *x, half *y, int N) {
-  int idx = 8 * (blockIdx.x * blockDim.x + threadIdx.x);
-  half2 reg_x_0 = HALF2(x[idx + 0]);
-  half2 reg_x_1 = HALF2(x[idx + 2]);
-  half2 reg_x_2 = HALF2(x[idx + 4]);
-  half2 reg_x_3 = HALF2(x[idx + 6]);
-  half2 reg_y_0, reg_y_1, reg_y_2, reg_y_3;
-  reg_y_0.x = swish_half(reg_x_0.x);
-  reg_y_0.y = swish_half(reg_x_0.y);
-  reg_y_1.x = swish_half(reg_x_1.x);
-  reg_y_1.y = swish_half(reg_x_1.y);
-  reg_y_2.x = swish_half(reg_x_2.x);
-  reg_y_2.y = swish_half(reg_x_2.y);
-  reg_y_3.x = swish_half(reg_x_3.x);
-  reg_y_3.y = swish_half(reg_x_3.y);
-  if ((idx + 0) < N) {
-    HALF2(y[idx + 0]) = reg_y_0;
-  }
-  if ((idx + 2) < N) {
-    HALF2(y[idx + 2]) = reg_y_1;
-  }
-  if ((idx + 4) < N) {
-    HALF2(y[idx + 4]) = reg_y_2;
-  }
-  if ((idx + 6) < N) {
-    HALF2(y[idx + 6]) = reg_y_3;
-  }
-}
+__global__ void swish_f16x8_kernel(half *x, half *y, int N) {}
 
-__global__ void swish_f16x8_pack_kernel(half *x, half *y, int N) {
-  int idx = 8 * (blockIdx.x * blockDim.x + threadIdx.x);
-  half pack_x[8], pack_y[8];
-  LDST128BITS(pack_x[0]) = LDST128BITS(x[idx]);
-
-#pragma unroll
-  for (int i = 0; i < 8; i++) {
-    pack_y[i] = swish_half(pack_x[i]);
-  }
-  if ((idx + 7) < N) {
-    LDST128BITS(y[idx]) = LDST128BITS(pack_y[0]);
-  }
-}
+__global__ void swish_f16x8_pack_kernel(half *x, half *y, int N) {}
 
 #define STRINGFY(str) #str
 #define TORCH_BINDING_COMMON_EXTENSION(func)                                   \

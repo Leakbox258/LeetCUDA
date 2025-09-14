@@ -30,107 +30,24 @@
   m.def(STRINGFY(func), &func, STRINGFY(func));
 
 // FP32
-__device__ __forceinline__ float hardswish(float x) {
-  if (x >= THRESHOLD_A) {
-    return x;
-  } else if (x <= THRESHOLD_B) {
-    return 0;
-  } else {
-    return x * (x + 3) / 6;
-  }
-}
+__device__ __forceinline__ float hardswish(float x) {}
 
 // FP16
-__device__ __forceinline__ half hardswish_half(half x) {
-  if (x > __float2half(THRESHOLD_A)) {
-    return x;
-  } else if (x < __float2half(THRESHOLD_B)) {
-    return __float2half(0.f);
-  } else {
-    return x * (x + __float2half(3.f)) / __float2half(6.f);
-  }
-}
+__device__ __forceinline__ half hardswish_half(half x) {}
 
 // FP32
-__global__ void hardswish_f32_kernel(float *x, float *y, int N) {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < N)
-    y[idx] = hardswish(x[idx]);
-}
+__global__ void hardswish_f32_kernel(float *x, float *y, int N) {}
 
-__global__ void hardswish_f32x4_kernel(float *x, float *y, int N) {
-  int idx = (blockIdx.x * blockDim.x + threadIdx.x) * 4;
-  if (idx < N) {
-    float4 reg_x = FLOAT4(x[idx]);
-    float4 reg_y;
-    reg_y.x = hardswish(reg_x.x);
-    reg_y.y = hardswish(reg_x.y);
-    reg_y.z = hardswish(reg_x.z);
-    reg_y.w = hardswish(reg_x.w);
-    FLOAT4(y[idx]) = reg_y;
-  }
-}
+__global__ void hardswish_f32x4_kernel(float *x, float *y, int N) {}
 
 // FP16
-__global__ void hardswish_f16_kernel(half *x, half *y, int N) {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < N)
-    y[idx] = hardswish_half(x[idx]);
-}
+__global__ void hardswish_f16_kernel(half *x, half *y, int N) {}
 
-__global__ void hardswish_f16x2_kernel(half *x, half *y, int N) {
-  int idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
-  if (idx < N) {
-    half2 reg_x = HALF2(x[idx]);
-    half2 reg_y;
-    reg_y.x = hardswish_half(reg_x.x);
-    reg_y.y = hardswish_half(reg_x.y);
-    HALF2(y[idx]) = reg_y;
-  }
-}
+__global__ void hardswish_f16x2_kernel(half *x, half *y, int N) {}
 
-__global__ void hardswish_f16x8_kernel(half *x, half *y, int N) {
-  int idx = 8 * (blockIdx.x * blockDim.x + threadIdx.x);
-  half2 reg_x_0 = HALF2(x[idx + 0]);
-  half2 reg_x_1 = HALF2(x[idx + 2]);
-  half2 reg_x_2 = HALF2(x[idx + 4]);
-  half2 reg_x_3 = HALF2(x[idx + 6]);
-  half2 reg_y_0, reg_y_1, reg_y_2, reg_y_3;
-  reg_y_0.x = hardswish_half(reg_x_0.x);
-  reg_y_0.y = hardswish_half(reg_x_0.y);
-  reg_y_1.x = hardswish_half(reg_x_1.x);
-  reg_y_1.y = hardswish_half(reg_x_1.y);
-  reg_y_2.x = hardswish_half(reg_x_2.x);
-  reg_y_2.y = hardswish_half(reg_x_2.y);
-  reg_y_3.x = hardswish_half(reg_x_3.x);
-  reg_y_3.y = hardswish_half(reg_x_3.y);
-  if ((idx + 0) < N) {
-    HALF2(y[idx + 0]) = reg_y_0;
-  }
-  if ((idx + 2) < N) {
-    HALF2(y[idx + 2]) = reg_y_1;
-  }
-  if ((idx + 4) < N) {
-    HALF2(y[idx + 4]) = reg_y_2;
-  }
-  if ((idx + 6) < N) {
-    HALF2(y[idx + 6]) = reg_y_3;
-  }
-}
+__global__ void hardswish_f16x8_kernel(half *x, half *y, int N) {}
 
-__global__ void hardswish_f16x8_pack_kernel(half *x, half *y, int N) {
-  int idx = 8 * (blockIdx.x * blockDim.x + threadIdx.x);
-  half pack_x[8], pack_y[8];
-  LDST128BITS(pack_x[0]) = LDST128BITS(x[idx]);
-
-#pragma unroll
-  for (int i = 0; i < 8; i++) {
-    pack_y[i] = hardswish_half(pack_x[i]);
-  }
-  if ((idx + 7) < N) {
-    LDST128BITS(y[idx]) = LDST128BITS(pack_y[0]);
-  }
-}
+__global__ void hardswish_f16x8_pack_kernel(half *x, half *y, int N) {}
 
 #define TORCH_BINDING_HARDSWISH(packed_type, th_type, element_type,            \
                                 n_elements)                                    \
