@@ -1,0 +1,28 @@
+# .clangd
+
+CompileFlags:
+  Add:
+    # C++ Standard Flag
+    - "-std=c++17"
+
+    # PyTorch Header Paths (replace with your actual path)
+    - "-I"
+    - "/home/leakbox/.conda/envs/pass-for-onnx/lib/python3.13/site-packages/torch/include"
+    - "-I"
+    - "/home/leakbox/.conda/envs/pass-for-onnx/lib/python3.13/site-packages/torch/include/torch/csrc/api/include"
+    - "-I"
+    - "/usr/include/python3.13/"
+
+    # CUDA Toolkit Header Path (replace with your actual path)
+    - "-I"
+    - "/usr/local/cuda/include"
+
+    # - "--expt-relaxed-constexpr"
+    # - "--expt-extended-lambda"
+    # - "--use_fast_math"
+
+    # Define macros to prevent half-float operator issues
+    - "-U__CUDA_NO_HALF_OPERATORS__"
+    - "-U__CUDA_NO_HALF_CONVERSIONS__"
+    - "-U__CUDA_NO_HALF2_OPERATORS__"
+    - "-U__CUDA_NO_BFLOAT16_CONVERSIONS__"
